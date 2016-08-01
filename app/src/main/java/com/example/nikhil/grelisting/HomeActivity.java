@@ -27,6 +27,7 @@ public class HomeActivity extends AppCompatActivity {
     ListView lv;
     CustomAdapter c;
     List<String> temp;
+    List<Integer> progress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,12 +35,17 @@ public class HomeActivity extends AppCompatActivity {
         pref = getSharedPreferences("GRE", 0);
         days = pref.getInt("days", 0);
         temp = new ArrayList<>();
+        progress = new ArrayList<>();
         for (int i = 0; i < Math.ceil(total / days); i++) {
             temp.add("Day " + (i + 1));
+            float per = pref.getInt("day"+i,0)%pref.getInt("days",0);
+            per/=pref.getInt("days",0);
+            per*=100;
+            progress.add((int)per);
         }
-        c = new CustomAdapter(this, temp, pref);
+        c = new CustomAdapter(this, temp, progress);
+        //c.notifyDataSetChanged();
         lv = (ListView) findViewById(R.id.cardListView);
-        lv.invalidate();
         lv.setAdapter(c);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -50,58 +56,20 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
-        try
-        {
-            read("Obscure");
-        }
-        catch(IOException e){}
     }
-    public List<String> read(String key) throws IOException {
-        List<String> resultSet = new ArrayList<String>();
 
-        InputStream inputWorkbook = getResources().openRawResource(R.raw.book2);
-        if(true){
-            Workbook w;
-            try {
-                w = Workbook.getWorkbook(inputWorkbook);
-                // Get the first sheet
-                Sheet sheet = w.getSheet(0);
-                // Loop over column and lines
-                for (int j = 0; j < sheet.getRows(); j++) {
-                    //Cell cell = sheet.getCell(0, j);
-                    //if(cell.getContents().equalsIgnoreCase(key)){
-                        for (int i = 0; i < sheet.getColumns(); i++) {
-                            Cell cel = sheet.getCell(i, j);
-                            resultSet.add(cel.getContents());
-                            System.out.print(cel.getContents()+" ");
-                            //Log.i("test",cel.getContents());
-                        }
-                    System.out.println();
-                    //}
-                    //continue;
-                }
-            } catch (BiffException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        else
-        {
-            resultSet.add("File not found..!");
-        }
-        if(resultSet.size()==0){
-            resultSet.add("Data not found..!");
-        }
-        return resultSet;
-    }
     @Override
     public void onRestart(){
         super.onRestart();
-        ProgressBar pb = (ProgressBar) findViewById(R.id.progressBar);
+        //days = pref.getInt("days", 0);
+        progress.clear();
         for (int i = 0; i < Math.ceil(total / days); i++) {
-            int ans = (pref.getInt("day"+i,0)/pref.getInt("days",0))*100;
-            pb.setProgress(ans);
+            float per = pref.getInt("day"+i,0)%pref.getInt("days",0);
+            per/=pref.getInt("days",0);
+            per*=100;
+            progress.add((int)per);
+            Log.i("percent",per+"");
+            c.notifyDataSetChanged();
         }
     }
 }
